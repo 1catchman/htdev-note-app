@@ -19,6 +19,9 @@ import {
 import LoadingButton from '@mui/lab/LoadingButton';
 import SendIcon from '@mui/icons-material/Send';
 import { useLocalStorage } from 'usehooks-ts';
+import { useAppDispatch, useAppSelector } from '../redux/hooks';
+import { addNote, getNotes } from '../redux/notesSlice';
+import { NoteType } from './Notes';
 
 interface FormInput {
   noteText: string;
@@ -37,22 +40,26 @@ const initialAlertState: initialAlertStateProps = {
 };
 
 export default function CreateNote() {
+  const dispatch = useAppDispatch();
+  const { notes } = useAppSelector(getNotes);
+
   const {
     control,
     handleSubmit,
     resetField,
     watch,
     setValue,
-    formState: { errors, isValid, isSubmitSuccessful, isSubmitted }
+    formState: { errors, isValid }
   } = useForm<FormInput>({ mode: 'onChange' });
+
   const [timezone, setTimezone] = useLocalStorage('timezone', '');
-  const [note, setNote] = useLocalStorage('notes', []);
   const [fields, setFields] = useLocalStorage('fields', {
     text: '',
     sign: ''
   });
+
   const [timezones, setTimezones] = useState<string[]>([]);
-  const [date, setDate] = useState('');
+  const [date, setDate] = useState({} as any);
   const [loading, setLoading] = useState(false);
   const [disabled, setDisabled] = useState(true);
   const [open, setOpen] = React.useState(initialAlertState);
@@ -73,15 +80,16 @@ export default function CreateNote() {
 
   const onSubmit = (data: FormInput) => {
     const { noteText, noteSign } = data;
-    const newNote = {
-      id: note.length + 1,
+    const newNote: NoteType = {
+      id: notes.length + 1,
       text: noteText,
       sign: noteSign,
       tz: timezone,
       date
     };
     setLoading(true);
-    setNote([...note, newNote]);
+    // setNote([...note, newNote]);
+    dispatch(addNote(newNote));
     resetField('noteText');
     setLoading(false);
     setOpen({ success: true });
@@ -112,7 +120,7 @@ export default function CreateNote() {
     fetch(`https://worldtimeapi.org/api/timezone/${timezone}`)
       .then((response) => response.json())
       .then((data) => {
-        setDate(data.datetime);
+        setDate({ [data.timezone]: data.datetime });
         if (isValid && timezone.length) {
           setDisabled(false);
         }

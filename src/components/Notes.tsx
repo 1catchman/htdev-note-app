@@ -11,6 +11,8 @@ import {
   TablePagination
 } from '@mui/material';
 import { useLocalStorage } from 'usehooks-ts';
+import { useAppSelector } from '../redux/hooks';
+import { getNotes } from '../redux/notesSlice';
 
 export type NoteType = {
   id: number;
@@ -21,12 +23,10 @@ export type NoteType = {
 };
 
 export default function Notes() {
+  const { notes } = useAppSelector(getNotes);
+
   let navigate = useNavigate();
   const ref = React.useRef<HTMLDivElement>(null);
-  const [notes, setNotes] = useLocalStorage(
-    'notes',
-    [] as NoteType[]
-  );
   const [rowsPerPage, setRowsPerPage] = useLocalStorage(
     'notes-per-page',
     10
@@ -98,7 +98,7 @@ export default function Notes() {
                         color="text.secondary"
                         component="span"
                       >
-                        {`${note.date}`}
+                        {`${note.date[note.tz]}`}
                       </Typography>
                     </Box>
                     <Box>
